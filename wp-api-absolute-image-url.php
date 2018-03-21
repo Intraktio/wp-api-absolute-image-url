@@ -37,6 +37,7 @@ class WP_API_Absolute_Image_Url {
             if( $is_rest === true ) {
                 add_filter( 'wp_calculate_image_srcset', array($this, 'append_site_url_to_srcset'), 10, 5 );
 	        add_filter( 'wp_get_attachment_image_src', array( $this, 'handle_attachment_image_urls' ), 10, 4 );
+                add_filter( 'wp_get_attachment_url', array( $this, 'handle_attachment_url' ), 10, 2 );
             }
         } catch (Exception $e) {}
         return $query;
@@ -55,12 +56,29 @@ class WP_API_Absolute_Image_Url {
             if ( $image === false ) {
                     return $image;
             }
-            $url = $image[0];
-            if ( !preg_match("/^[a-zA-Z]+:\/\//", $url) ) {
-                    $url = get_site_url() . $url;
-                    $image[0] = $url;
-            }
+            $image[0] = $this->get_absolute_url( $image[0] );
             return $image;
+    }
+
+    /**
+     * Convverts relative attachment url to absolute;
+     *
+     * @param string $url           URL for the given attachment.
+     * @param int    $attachment_id Attachment post ID.
+     */
+    public function handle_attachment_url( $url, $attachment_id ) {
+        return $this->get_absolute_url( $url );
+    }
+
+    /**
+     * Converts relative url to absolute.
+     * @param string    $url    Url to convert.
+     */
+    private function get_absolute_url( $url ) {
+            if ( !preg_match("/^[a-zA-Z]+:\/\//", $url) ) {
+                    return get_site_url() . $url;
+            }
+            return $url;
     }
 
 }
